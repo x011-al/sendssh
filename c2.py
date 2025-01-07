@@ -21,11 +21,11 @@ def monitor_sent_mail():
             while True:
                 server.select_folder(FOLDER_SENT, readonly=True)  # Pilih folder terkirim
                 messages = server.search(['ALL'])  # Ambil semua email
-                messages = sorted(messages, reverse=True)  # Urutkan dari email terbaru
+                messages = sorted(messages)  # Urutkan dari email terlama
 
-                for msg_id in messages:
+                for index, msg_id in enumerate(messages, start=1):
                     if msg_id <= last_processed_id:
-                        break  # Hentikan jika ID pesan sudah diproses sebelumnya
+                        continue  # Lewati jika ID pesan sudah diproses sebelumnya
 
                     msg_data = server.fetch(msg_id, ['ENVELOPE', 'BODY[]'])
                     envelope = msg_data[msg_id][b'ENVELOPE']
@@ -40,6 +40,7 @@ def monitor_sent_mail():
 
                     # Tampilkan hanya jika ada link
                     if links:
+                        print(f"Nomor: {index}")
                         print(f"Dikirim ke: {to_address}")
                         print(f"Datetime: {date_time}")
                         print("email:")
