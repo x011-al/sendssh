@@ -5,26 +5,42 @@ from imapclient import IMAPClient
 IMAP_SERVER = 'imap.gmail.com'
 EMAIL_ADDRESS = 'sshxuser@gmail.com'
 EMAIL_PASSWORD = 'cjikhikvzcvutonp'
-FOLDER_SENT = '[Gmail]/Sent Mail'  # Untuk Gmail biasanya "Sent Mail", bisa juga "[Gmail]/Surat Terkirim"
 
 def delete_sent_mail():
     try:
         with IMAPClient(IMAP_SERVER) as server:
             server.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-            print(f"Menghapus semua email di folder: {FOLDER_SENT}...\n")
 
-            server.select_folder(FOLDER_SENT)  # Pilih folder terkirim
-            messages = server.search(['ALL'])  # Ambil semua email
+            # Tampilkan semua folder untuk debug
+            folders = server.list_folders()
+            print("Daftar folder tersedia:")
+            for f in folders:
+                print(f)
 
+            # Coba deteksi folder terkirim (Sent Mail / Surat Terkirim)
+            possible_folders = ['[Gmail]/Sent Mail', '[Gmail]/Surat Terkirim', 'Sent', 'Sent Items']
+            sent_folder = None
+            for _, _, name in folders:
+                if name in possible_folders:
+                    sent_folder = name
+                    break
+
+            if not sent_folder:
+                print("Folder terkirim tidak ditemukan. Cek daftar folder di atas.")
+                return
+
+            print(f"\nMenghapus semua email di folder: {sent_folder}...\n")
+            server.select_folder(sent_folder)
+
+            messages = server.search(['ALL'])
             if not messages:
                 print("Tidak ada email untuk dihapus.")
                 return
 
-            # Tandai semua pesan untuk dihapus
             server.delete_messages(messages)
             server.expunge()
 
-            print(f"Berhasil menghapus {len(messages)} email dari folder terkirim.")
+            print(f"Berhasil menghapus {len(messages)} email dari folder {sent_folder}.")
 
     except Exception as e:
         print(f"Error: {e}")
